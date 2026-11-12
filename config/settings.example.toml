@@ -1,0 +1,58 @@
+# Copy to config/settings.toml (git-ignored) and pass with --config.
+# Every value here is optional; anything left out falls back to the built-in default.
+# Secrets never go in this file: Azure uses DefaultAzureCredential, AWS uses the
+# standard credential chain.
+
+[window]
+hours = 6
+
+[sources.azure_appinsights]
+enabled = true
+workspace_id = ""          # Log Analytics workspace id, or env APPINSIGHTS_WORKSPACE_ID
+transaction_event_names = ["FundsTransfer"]
+
+# customEvent property names -> fields py-monitor understands
+[sources.azure_appinsights.property_map]
+account_id = "accountId"
+amount = "amount"
+currency = "currency"
+counterparty = "beneficiaryId"
+transaction_id = "transactionId"
+
+[sources.aws_xray]
+enabled = true
+region = "eu-west-2"       # or env AWS_REGION
+filter_expression = ""     # e.g. 'service("payments-service")'
+
+[detectors.rapid_repeat_transfer]
+enabled = true
+window_minutes = 5         # "quick succession"
+min_count = 3              # how many identical transfers make a burst
+high_severity_count = 5
+high_value_total = 10000
+
+[detectors.transaction_velocity]
+enabled = true
+window_minutes = 10
+max_count = 10
+max_total = 20000
+
+[detectors.structuring]
+enabled = true
+threshold = 10000
+margin_pct = 10            # flag amounts within 10% below the threshold
+window_hours = 24
+min_count = 3
+
+[detectors.latency_spike]
+enabled = true
+bucket_minutes = 5
+percentile = 90
+ratio = 3.0
+
+[detectors.error_rate]
+enabled = true
+bucket_minutes = 5
+min_requests = 20
+min_error_rate = 0.10
+multiplier = 5.0
